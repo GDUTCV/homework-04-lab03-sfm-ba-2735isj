@@ -44,8 +44,15 @@ def compute_ba_residuals(parameters: np.ndarray, intrinsics: np.ndarray, num_cam
     NOTE: DO NOT USE LOOPS 
     HINT: I used np.matmul; np.sum; np.sqrt; np.square, np.concatenate etc.
     """
-    
+    proj_mtx = extrinsics[camera_idxs]
+    proj_mtx = np.einsum('ij,kjl->kil', intrinsics, proj_mtx)
 
-    
+    homo_2d = np.concatenate((points2d, np.ones((points2d.shape[0],1))), axis=1)
+    homo_3d = np.concatenate((points3d[points3d_idxs], np.ones((points3d[points3d_idxs].shape[0], 1))), axis=1)
+
+    proj_2d = np.einsum('kj,klj->kl', homo_3d, proj_mtx)
+    proj_2d = proj_2d / np.repeat(proj_2d[:,2].reshape(proj_2d.shape[0], 1), 3, axis=1) # Normalizing
+
+    residuals = np.linalg.norm(homo_2d - proj_2d, axis=1)
     """ END YOUR CODE HERE """
     return residuals
